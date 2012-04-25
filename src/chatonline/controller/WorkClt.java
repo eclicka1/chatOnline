@@ -137,6 +137,7 @@ public class WorkClt {
 			String bcmd=ifrom.receive();
 			InfoWithPhoto.toPhotoList(bcmd,ilist);
 			InfoWithPhoto.writePhotoFile(ilist);
+			ihook.getPhotos(ilist);
 		}
 	}
 	public void getAskFrd(List<AskFrd> alist){

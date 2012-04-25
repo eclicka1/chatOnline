@@ -16,6 +16,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.text.NumberFormat;
+import java.util.List;
 
 import javax.swing.ButtonGroup;
 
@@ -24,6 +25,7 @@ import chatonline.controller.HookListenClt;
 import chatonline.controller.WorkClt;
 import chatonline.utility.AskFrd;
 import chatonline.utility.Info;
+import chatonline.utility.InfoWithPhoto;
 import chatonline.utility.User;
 import javax.swing.JFormattedTextField;
 
@@ -52,6 +54,9 @@ public class LoginViewer extends JFrame{
 			}
 			@Override
 			public void askForFrd(AskFrd aask) {
+			}
+			@Override
+			public void getPhotos(List<InfoWithPhoto> alist) {
 			}
 		});
 		

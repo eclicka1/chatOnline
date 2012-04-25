@@ -3,8 +3,11 @@
  */
 package chatonline.controller;
 
+import java.util.List;
+
 import chatonline.utility.AskFrd;
 import chatonline.utility.Info;
+import chatonline.utility.InfoWithPhoto;
 
 /** @ClassName: HookListenClt 
  * @Description: get data from listener
@@ -17,4 +20,5 @@ public interface HookListenClt {
 	public void askForFrd(AskFrd aask);
 	public void sentInfo(Info ainfo);
 	public void getAskFrdRespond(int aid,boolean ais);
+	public void getPhotos(List<InfoWithPhoto> alist);
 }
