@@ -8,7 +8,9 @@ import java.util.Scanner;
 
 import chatonline.access.Access;
 import chatonline.utility.AskFrd;
+import chatonline.utility.ChatSocket;
 import chatonline.utility.Info;
+import chatonline.utility.InfoWithPhoto;
 import chatonline.utility.User;
 
 public class WorkSer {
@@ -35,10 +37,10 @@ public class WorkSer {
 
 	public void login(Scanner ascan) {
 		int bid = ascan.nextInt();
-		int bstate=ascan.nextInt();
+		int bstate = ascan.nextInt();
 		String bpswd = ascan.nextLine().substring(1);
 		// authenticate
-		if (Access.login(bid, bpswd,bstate)) {
+		if (Access.login(bid, bpswd, bstate)) {
 			iId = bid;
 			iCom.sendCmd("true");
 		} else {
@@ -60,16 +62,35 @@ public class WorkSer {
 
 	public void getNotes(Scanner ascan) {
 		List<Info> blist = new LinkedList<Info>();
-		Access.getNotes(iId, blist);
+		List<InfoWithPhoto> blist2=new LinkedList<InfoWithPhoto>();
+		Access.getNotes(iId,blist,blist2);
 
 		iCom.sendCmd(Info.toLine(blist));
+		iCom.sendCmd(InfoWithPhoto.toLineWithoutPhoto(blist2));
+
+		if(blist2.size()!=0){
+			ChatSocket bto=iCom.getLink();
+			new Thread(new SendPhoto(bto, blist2)).start();
+		}
 	}
-	public void getAskFrd(Scanner ascan){
+	class SendPhoto implements Runnable{
+		private ChatSocket ito;
+		private List<InfoWithPhoto> ilist;
+		public SendPhoto(ChatSocket ato,List<InfoWithPhoto> alist){
+			ito= ato;
+			ilist=alist;
+		}
+		public void run(){
+			ito.send(InfoWithPhoto.toPhotoLine(ilist));
+		}
+	}
+	public void getAskFrd(Scanner ascan) {
 		List<AskFrd> blist = new LinkedList<AskFrd>();
 		Access.getAskFrd(iId, blist);
 
 		iCom.sendCmd(AskFrd.toLine(blist));
 	}
+
 	public void startupListener(Scanner ascan) {
 		ComModuleSer.addComModule(iCom, iId);
 	}
@@ -139,27 +160,27 @@ public class WorkSer {
 	}
 
 	public void addFrd(Scanner ascan) {// int aid
-		AskFrd bask=new AskFrd(ascan.nextLine());
+		AskFrd bask = new AskFrd(ascan.nextLine());
 		ComModuleSer bcom = ComModuleSer.getComModule(bask.itoid);
 		if (bcom != null) {
-			bcom.sendInfo("askForFrd "+bask.toLine());
+			bcom.sendInfo("askForFrd " + bask.toLine());
 		} else {
 			Access.addAskForFrd(bask);
 		}
 	}
-	
-	public void askFrdRespond(Scanner ascan){
-		int bid=ascan.nextInt();
-		boolean bis=ascan.nextBoolean();
-		if(bis){
-			Access.addFrd(iId,bid);
+
+	public void askFrdRespond(Scanner ascan) {
+		int bid = ascan.nextInt();
+		boolean bis = ascan.nextBoolean();
+		if (bis) {
+			Access.addFrd(iId, bid);
 		}
-		ComModuleSer bcom=ComModuleSer.getComModule(bid);
-		if(bcom!=null){
-			bcom.sendCmd(String.format("getAskFrdRespond %d %s", iId,bis));
+		ComModuleSer bcom = ComModuleSer.getComModule(bid);
+		if (bcom != null) {
+			bcom.sendCmd(String.format("getAskFrdRespond %d %s", iId, bis));
 		}
 	}
-	
+
 	public void delFrd(Scanner ascan) {
 		int bid = ascan.nextInt();
 		ComModuleSer bcom = ComModuleSer.getComModule(bid);
@@ -211,21 +232,71 @@ public class WorkSer {
 	/*******************************************************************************
 	 * transmit messages
 	 ********************************************************************************/
-	public void sentInfo(Scanner ascan) {
+	public void sendInfo(Scanner ascan) {
 		String bstr = ascan.nextLine();
 		Info binfo = new Info(bstr);
 		ComModuleSer bcom = ComModuleSer.getComModule(binfo.iToId);
 		if (bcom != null) {
-			bcom.sendInfo("sentInfo " + bstr);
+			bcom.sendInfo("sendInfo " + bstr);
 			Access.addInfo(binfo, true);
 		} else {
 			Access.addInfo(binfo, false);
 		}
 	}
 
-	/*
-	 * public void getInfo(Info ainfo) { }
-	 */
+	public void sendInfoWithPhoto(Scanner ascan) {
+		InfoWithPhoto binfo = new InfoWithPhoto(ascan.nextLine());
+		ComModuleSer bcom = ComModuleSer.getComModule(binfo.iToId);
+		ChatSocket bToSocket=null;
+		if (bcom != null) {
+			bcom.sendInfo("sendInfoWithPhoto "+binfo.toPartLine());
+			bToSocket=iCom.getLink();
+			
+			iCom.sendCmd("ok");
+			ChatSocket bFromSocket=iCom.getLink();
+			new Thread(new TransmitPhoto(bFromSocket,bToSocket,binfo)).start();
+		}else{
+			iCom.sendCmd("ok");
+			ChatSocket bFromSocket=iCom.getLink();
+			new Thread(new GetPhoto(bFromSocket,binfo)).start();
+		}
+	}
+	class GetPhoto implements Runnable{
+		private ChatSocket ifrom;
+		private InfoWithPhoto iinfo;
+		
+		public GetPhoto(ChatSocket afrom,InfoWithPhoto ainfo){
+			ifrom=afrom;
+			iinfo=ainfo;
+		}
+		public void run(){
+			String bstr=ifrom.receive();
+			iinfo.initFromPhotoLine(bstr);
+			Access.addInfoWithPhoto(iinfo, false);
+			iinfo.writePhotoFile();
+			ifrom.closeSocket();
+		}
+	}
+	class TransmitPhoto implements Runnable{
+		private ChatSocket ifrom;
+		private ChatSocket ito;
+		private InfoWithPhoto iinfo;
+		public TransmitPhoto(ChatSocket afrom,ChatSocket ato,InfoWithPhoto ainfo){
+			ifrom=afrom;
+			ito=ato;
+			iinfo=ainfo;
+		}
+		@Override
+		public void run() {
+			String bstr=ifrom.receive();
+			iinfo.initFromPhotoLine(bstr);
+			ito.send(bstr);
+			Access.addInfoWithPhoto(iinfo, true);
+			iinfo.writePhotoFile();
+			ifrom.closeSocket();
+			ito.closeSocket();
+		}
+	}
 	/*******************************************************************************
 	 * close Communicate
 	 ********************************************************************************/
@@ -237,9 +308,9 @@ public class WorkSer {
 		if (++icnum == 2) {
 			iCom.sendInfo("closeWork");
 			closeWork();
-		} else{
+		} else {
 			ComModuleSer.delComModule(iId);
-			Access.setUserState(iId,User.OFFLINE);
+			Access.setUserState(iId, User.OFFLINE);
 		}
 	}
 
@@ -253,7 +324,7 @@ public class WorkSer {
 	public void requestClose() {
 		iCom.sendInfo("requestClose");
 		ComModuleSer.delComModule(iId);
-		Access.setUserState(iId,User.OFFLINE);
+		Access.setUserState(iId, User.OFFLINE);
 	}
 
 	public void closeWork() {// sent request for closing

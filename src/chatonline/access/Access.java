@@ -11,6 +11,7 @@ import java.util.Map;
 
 import chatonline.utility.AskFrd;
 import chatonline.utility.Info;
+import chatonline.utility.InfoWithPhoto;
 import chatonline.utility.User;
 
 /**
@@ -67,7 +68,7 @@ public class Access {
 		return false;
 	}
 
-	public static boolean login(int aid, String apswd,int astate) {
+	public static boolean login(int aid, String apswd, int astate) {
 		Connection con = DBMSTool.getConnection();
 		PreparedStatement stmt = null;
 		ResultSet reSet = null;
@@ -76,11 +77,11 @@ public class Access {
 			stmt = con.prepareStatement(sqlstr);
 			reSet = stmt.executeQuery();
 			if (reSet.next()) {
-				if(apswd.equals(reSet.getString(1))){
+				if (apswd.equals(reSet.getString(1))) {
 					DBMSTool.closeStatement(stmt);
-					
-					sqlstr="update chatuser set state=? where id=?";
-					stmt=con.prepareStatement(sqlstr);
+
+					sqlstr = "update chatuser set state=? where id=?";
+					stmt = con.prepareStatement(sqlstr);
 					stmt.setInt(1, astate);
 					stmt.setInt(2, aid);
 					stmt.executeUpdate();
@@ -129,20 +130,34 @@ public class Access {
 		}
 	}
 
-	public static void getNotes(int aid, List<Info> alist) {
+	public static void getNotes(int aid, List<Info> alist,
+			List<InfoWithPhoto> alist2) {
 		Info binfo;
+		InfoWithPhoto binfo2;
 		Connection con = DBMSTool.getConnection();
 		PreparedStatement stmt = null;
 		ResultSet reSet = null;
-		String sqlstr = "select fromid,toid,sendtime,content "
-				+ "from info,msgleft " + "where infoid=id and toid=" + aid;
+		String sqlstr = "select fromid,toid,sendtime,content, photonum "
+				+ "from info,msgleft "
+				+ "where infoid=id and toid=? order by sendtime";
 		try {
 			stmt = con.prepareStatement(sqlstr);
+			stmt.setInt(1, aid);
 			reSet = stmt.executeQuery();
 			while (reSet.next()) {
-				binfo = new Info(reSet.getInt("fromid"), reSet.getInt("toid"),
-						reSet.getDate("sendtime"), reSet.getString("content"));
-				alist.add(binfo);
+				if (0 < reSet.getInt("photonum")) {
+					binfo2=new InfoWithPhoto(reSet.getInt("fromid"),
+							reSet.getInt("toid"),
+							reSet.getDate("sendtime"));
+					binfo2.initFromTxtLine(reSet.getString("content"));
+					binfo2.readPhotoFile();
+					alist2.add(binfo2);
+				} else {
+					binfo = new Info(reSet.getInt("fromid"),
+							reSet.getInt("toid"), reSet.getDate("sendtime"),
+							reSet.getString("content"));
+					alist.add(binfo);
+				}
 			}
 			DBMSTool.closeStatement(stmt);
 
@@ -175,7 +190,7 @@ public class Access {
 			}
 			DBMSTool.closeStatement(stmt);
 
-			sqlstr = "delete from msgleft where touserid=?";
+			sqlstr = "delete from askfrd where toid=?";
 			stmt = con.prepareStatement(sqlstr);
 			stmt.setInt(1, aid);
 			stmt.executeUpdate();
@@ -345,11 +360,54 @@ public class Access {
 				DBMSTool.closeStatement(stmt);
 				bSqlStr = "select max(id) as maxid from info";
 				stmt = con.prepareStatement(bSqlStr);
-				reSet=stmt.executeQuery();
-				if(reSet.next()){
-					bid=reSet.getInt("maxid");
+				reSet = stmt.executeQuery();
+				if (reSet.next()) {
+					bid = reSet.getInt("maxid");
 					DBMSTool.closeStatement(stmt);
-					
+
+					bSqlStr = "insert into msgleft values(?,?)";
+					stmt = con.prepareStatement(bSqlStr);
+					stmt.setInt(1, bid);
+					stmt.setInt(2, ainfo.iToId);
+					stmt.executeUpdate();
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			DBMSTool.closeStatement(stmt);
+			DBMSTool.closeConnection(con);
+		}
+	}
+
+	public synchronized static void addInfoWithPhoto(InfoWithPhoto ainfo,
+			boolean aIsSent) {
+		int bid;
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+		Connection con = DBMSTool.getConnection();
+		PreparedStatement stmt = null;
+		ResultSet reSet = null;
+		String bSqlStr = "insert into "
+				+ "info(fromid,toid,content,sendtime,photonum) "
+				+ "values(?,?,?,?,?)";
+		try {
+			stmt = con.prepareStatement(bSqlStr);
+			stmt.setInt(1, ainfo.iFromId);
+			stmt.setInt(2, ainfo.iToId);
+			stmt.setString(3, ainfo.toTxtLine());
+			stmt.setString(4, df.format(ainfo.idate));
+			stmt.setInt(5, ainfo.getPhotoSize());
+			stmt.executeUpdate();
+
+			if (!aIsSent) {
+				DBMSTool.closeStatement(stmt);
+				bSqlStr = "select max(id) as maxid from info";
+				stmt = con.prepareStatement(bSqlStr);
+				reSet = stmt.executeQuery();
+				if (reSet.next()) {
+					bid = reSet.getInt("maxid");
+					DBMSTool.closeStatement(stmt);
+
 					bSqlStr = "insert into msgleft values(?,?)";
 					stmt = con.prepareStatement(bSqlStr);
 					stmt.setInt(1, bid);
@@ -372,7 +430,7 @@ public class Access {
 		try {
 			stmt = con.prepareStatement(bSqlStr);
 			stmt.setInt(1, aid);
-			stmt.setString(2,aname);
+			stmt.setString(2, aname);
 			stmt.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -392,9 +450,9 @@ public class Access {
 			stmt.setInt(2, aid);
 			stmt.executeUpdate();
 			DBMSTool.closeStatement(stmt);
-			
-			bSqlStr="delete from frdgroup where userid=? and name=?";
-			stmt=con.prepareStatement(bSqlStr);
+
+			bSqlStr = "delete from frdgroup where userid=? and name=?";
+			stmt = con.prepareStatement(bSqlStr);
 			stmt.setInt(1, aid);
 			stmt.setString(2, aname);
 			stmt.executeUpdate();
@@ -441,12 +499,13 @@ public class Access {
 			DBMSTool.closeConnection(con);
 		}
 	}
-	public static void setUserState(int aid,int astate){
+
+	public static void setUserState(int aid, int astate) {
 		Connection con = DBMSTool.getConnection();
 		PreparedStatement stmt = null;
 		String sqlstr;
-		
-		sqlstr="update chatuser set state=? where id=?";
+
+		sqlstr = "update chatuser set state=? where id=?";
 		try {
 			stmt = con.prepareStatement(sqlstr);
 			stmt.setInt(1, astate);

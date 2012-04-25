@@ -26,7 +26,6 @@ import chatonline.utility.AskFrd;
 import chatonline.utility.Info;
 import chatonline.utility.User;
 import javax.swing.JFormattedTextField;
-import javax.swing.text.NumberFormatter;
 
 /** @ClassName: LoginViewer 
  * @Description: viewer for login

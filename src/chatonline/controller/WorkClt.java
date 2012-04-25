@@ -8,7 +8,9 @@ import java.util.Map;
 import java.util.Scanner;
 
 import chatonline.utility.AskFrd;
+import chatonline.utility.ChatSocket;
 import chatonline.utility.Info;
+import chatonline.utility.InfoWithPhoto;
 import chatonline.utility.User;
 
 public class WorkClt {
@@ -40,7 +42,8 @@ public class WorkClt {
 				}
 			}
 			List<Info> blist = new LinkedList<Info>();
-			clt.getNotes(blist);
+			List<InfoWithPhoto> blist2=new LinkedList<InfoWithPhoto>();
+			clt.getNotes(blist,blist2);
 			for (Info binfo : blist) {
 				System.out.println(binfo.toString());
 			}
@@ -110,14 +113,32 @@ public class WorkClt {
 		User.toGroupMap(bcmd, amap);
 	}
 
-	public void getNotes(List<Info> alist) {
+	public void getNotes(List<Info> alist,List<InfoWithPhoto> alist2) {
 		iCom.sendCmd("getNotes");
 		String bcmd = iCom.getCmd();
-		if (bcmd.length() == 0)
-			return;
-		Info.toList(bcmd, alist);
+		if (bcmd.length() != 0)
+			Info.toList(bcmd, alist);
+
+		bcmd=iCom.getCmd();
+		if(bcmd.length()!=0){
+			InfoWithPhoto.toListWithoutPhoto(alist2, bcmd);
+			ChatSocket bfrom=iCom.getLink();
+			new Thread(new GetPhoto(alist2, bfrom)).start();
+		}
 	}
-	
+	class GetPhoto implements Runnable{
+		private ChatSocket ifrom;
+		private List<InfoWithPhoto> ilist;
+		public GetPhoto(List<InfoWithPhoto> alist,ChatSocket afrom){
+			ilist=alist;
+			ifrom=afrom;
+		}
+		public void run(){
+			String bcmd=ifrom.receive();
+			InfoWithPhoto.toPhotoList(bcmd,ilist);
+			InfoWithPhoto.writePhotoFile(ilist);
+		}
+	}
 	public void getAskFrd(List<AskFrd> alist){
 		iCom.sendCmd("getAskFrd");
 		String bcmd=iCom.getCmd();
@@ -232,12 +253,12 @@ public class WorkClt {
 	/*******************************************************************************
 	 * transmit information
 	 ********************************************************************************/
-	public void sentInfo(int aid, String ainfo) {
+	public void sendInfo(int aid, String ainfo) {
 		Info binfo = new Info(iId, aid, new Date(), ainfo);
-		iCom.sendCmd("sentInfo " + binfo.toLine());
+		iCom.sendCmd("sendInfo " + binfo.toLine());
 	}
 
-	public void sentInfo(Scanner ascan) {
+	public void sendInfo(Scanner ascan) {
 		String bstr = ascan.nextLine();
 		Info binfo = new Info(bstr);
 
@@ -245,6 +266,24 @@ public class WorkClt {
 		ihook.sentInfo(binfo);
 	}
 
+	public void sendInfoWithPhoto(InfoWithPhoto ainfo){
+		iCom.sendCmd("sendInfoWithPhoto "+ainfo.toPartLine());
+		iCom.getCmd();
+		ChatSocket bsocket=iCom.getLink();
+		
+		new Thread(new SendPhoto(bsocket,ainfo)).start();
+	}
+	class SendPhoto implements Runnable{
+		private ChatSocket ito;
+		private InfoWithPhoto iinfo;
+		public SendPhoto(ChatSocket ato,InfoWithPhoto ainfo){
+			ito=ato;
+			iinfo=ainfo;
+		}
+		public void run(){
+			ito.send(iinfo.toPhotoLine());
+		}
+	}
 	/*******************************************************************************
 	 * close function
 	 ********************************************************************************/

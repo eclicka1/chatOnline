@@ -5,21 +5,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
 
-import javax.swing.JFrame;
-
-import chatonline.access.DBMSTool;
-import chatonline.controller.ComModuleClt;
-import chatonline.controller.WorkClt;
-import chatonline.utility.User;
-
+import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Encoder;
 public class ForTest {
 	public static void main(String[] args) {
 		/*
@@ -118,19 +106,34 @@ public class ForTest {
 		 * Scanner it=new Scanner("123\n45678910"); it.useDelimiter("6|\n");
 		 * System.out.println(it.next()); System.out.println(it.nextInt());
 		 */
-
-		File file = new File("1.jpg");
+		
+		/*******************************************************************************
+                                photo file to string                       
+********************************************************************************/
+		/*File file = new File("1.bmp");
 		FileInputStream in = null;
 
-		File filein = new File("2.jpg");
+		File filein = new File("2.bmp");
 		FileOutputStream out = null;
 		try {
 			in = new FileInputStream(file);
 			byte[] buf = new byte[(int) file.length()];
-			int length=in.read(buf);
-			
+			in.read(buf);
+			BASE64Encoder encoder = new BASE64Encoder();  
+		    String bstr=encoder.encode(buf);
+		    
+		    
+		    BASE64Decoder decoder=new BASE64Decoder();
+            byte[] b = decoder.decodeBuffer(bstr);  
+            for(int i=0;i<b.length;++i)  
+            {  
+                if(b[i]<0)  
+                {//调整异常数据  
+                    b[i]+=256;  
+                }  
+            } 
 			out = new FileOutputStream(filein);
-			out.write(buf, 0, length);
+			out.write(b);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -144,7 +147,9 @@ public class ForTest {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}
-
+		}*/
+		String bstr="123.lhl";
+		int bint=bstr.lastIndexOf(".")+1;
+		System.out.println(bstr.substring(bint));
 	}
 }
