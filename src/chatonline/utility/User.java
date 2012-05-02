@@ -27,7 +27,8 @@ public Date iRegisterDay;
 public static int OFFLINE=2;
 public static int ONLINE=1;
 public static int HIDE=3;
-
+public static int BOY=0;
+public static int Girl=1;
 public User(){
 	
 }

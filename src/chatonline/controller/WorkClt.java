@@ -86,7 +86,10 @@ public class WorkClt {
 
 	public boolean register(User auser, String apswd) {
 		iCom.sendCmd(String.format("register %s %s", apswd, auser.toLine()));
-		if (iCom.getCmd().equals("true")) {
+		String bcmd=iCom.getCmd();
+		int bid=Integer.parseInt(bcmd);
+		if (-1!=bid) {
+			auser.iId=bid;
 			return true;
 		} else {
 			return false;

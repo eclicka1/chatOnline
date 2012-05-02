@@ -35,6 +35,7 @@ public class Access {
 			reSet = stmt.executeQuery();
 			if (reSet.next()) {
 				bid = reSet.getInt("maxid");
+				auser.iId=bid;
 			}
 			DBMSTool.closeStatement(stmt);
 

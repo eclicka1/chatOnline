@@ -27,11 +27,14 @@ public class WorkSer {
 	public void register(Scanner ascan) {
 		String bpswd = ascan.next();
 		String bstr = ascan.nextLine();
+		System.out.println(bpswd);
+		System.out.println(bstr);
+		
 		User buser = new User(bstr, true);
 		if (Access.register(buser, bpswd)) {
-			iCom.sendCmd("true");
+			iCom.sendCmd(""+buser.iId);
 		} else {
-			iCom.sendCmd("false");
+			iCom.sendCmd("-1");
 		}
 	}
 

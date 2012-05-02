@@ -7,6 +7,7 @@ import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.JPasswordField;
 import javax.swing.JButton;
@@ -15,7 +16,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.text.DateFormat;
 import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import javax.swing.ButtonGroup;
@@ -28,6 +33,8 @@ import chatonline.utility.Info;
 import chatonline.utility.InfoWithPhoto;
 import chatonline.utility.User;
 import javax.swing.JFormattedTextField;
+import javax.swing.text.DateFormatter;
+import java.awt.event.WindowAdapter;
 
 /** @ClassName: LoginViewer 
  * @Description: viewer for login
@@ -38,6 +45,12 @@ import javax.swing.JFormattedTextField;
 public class LoginViewer extends JFrame{
 	private CardLayout iCardLayout=new CardLayout(0, 0);
 	public LoginViewer() {
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent arg0) {
+				iWork.requestClose();
+			}
+		});
 		iCom=new ComModuleClt();
 		iCom.initCom();
 		iWork=new WorkClt();
@@ -84,21 +97,12 @@ public class LoginViewer extends JFrame{
 		
 		label_6 = new JLabel("\u5BC6\u7801");
 		
-		iPswdTxtFld1 = new JTextField();
-		iPswdTxtFld1.setColumns(10);
-		
 		label_7 = new JLabel("\u786E\u8BA4\u5BC6\u7801");
-		
-		iPswdTxtFld2 = new JTextField();
-		iPswdTxtFld2.setColumns(10);
 		
 		label_8 = new JLabel("\u5730\u5740");
 		
 		iAddressTxtFld = new JTextField();
 		iAddressTxtFld.setColumns(10);
-		
-		iBirthdayTxtFld = new JTextField();
-		iBirthdayTxtFld.setColumns(10);
 		
 		iBoyRadioBttn = new JRadioButton("\u7537");
 		buttonGroup.add(iBoyRadioBttn);
@@ -106,113 +110,133 @@ public class LoginViewer extends JFrame{
 		iGirlRadioBttn = new JRadioButton("\u5973");
 		buttonGroup.add(iGirlRadioBttn);
 		
-		JButton iRegisterBttn = new JButton("\u6CE8\u518C");
-		
-		JButton iToLoginBttn = new JButton("\u767B\u5F55");
-		iToLoginBttn.addActionListener(new ActionListener() {
+		JButton RegisterBttn = new JButton("\u6CE8\u518C");
+		RegisterBttn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				iCardLayout.next(LoginViewer.this.getContentPane());
+				String bpswd1=new String(iPswdFld1.getPassword());
+				String bpswd2=new String(iPswdFld2.getPassword());
+				if(!bpswd1.equals(bpswd2)){
+					JOptionPane.showMessageDialog(null, "password isn't same!", "warn",JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				int bsex=User.BOY;
+				if(iGirlRadioBttn.isSelected()){
+					bsex=User.Girl;
+				}
+				try {
+					User buser;
+					buser = new User(0, iNameTxtFld.getText(), "none", iAddressTxtFld.getText()
+							, iDateFormat.parse(iBirthdayTxtFld.getText())
+							, iSignatureTxtFld.getText(), bsex, User.OFFLINE, new Date());
+					if(iWork.register(buser, bpswd1)){
+						iIdLabel.setText(""+buser.iId);
+						iIdBuf=buser.iId;
+						iCardLayout.show(LoginViewer.this.getContentPane(), "name_14760469390449");
+					}
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
+		
+		JButton RegisterToLoginBttn = new JButton("\u767B\u5F55");
+		RegisterToLoginBttn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				iCardLayout.show(LoginViewer.this.getContentPane(),"name_29273997257395");
 			}
 		});
 		
 		iLoginPane = new JPanel();
 		getContentPane().add(iLoginPane, "name_29273997257395");
 		getContentPane().add(iRegisterPane, "name_29260218592308");
+		iDateFormat=new SimpleDateFormat("yyyy-MM-dd");
+		DateFormatter df=new DateFormatter(iDateFormat);
+		iBirthdayTxtFld = new JFormattedTextField(df);
+		
+		iPswdFld1 = new JPasswordField();
+		
+		iPswdFld2 = new JPasswordField();
 		GroupLayout gl_iRegisterPane = new GroupLayout(iRegisterPane);
 		gl_iRegisterPane.setHorizontalGroup(
 			gl_iRegisterPane.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_iRegisterPane.createSequentialGroup()
+					.addGap(10)
+					.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_iRegisterPane.createSequentialGroup()
+							.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.LEADING)
+								.addComponent(label_6)
+								.addComponent(label_8))
+							.addGap(24)
+							.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.LEADING)
+								.addGroup(gl_iRegisterPane.createSequentialGroup()
+									.addComponent(iPswdFld1, GroupLayout.PREFERRED_SIZE, 115, GroupLayout.PREFERRED_SIZE)
+									.addGap(18)
+									.addComponent(label_7)
+									.addPreferredGap(ComponentPlacement.RELATED)
+									.addComponent(iPswdFld2, GroupLayout.DEFAULT_SIZE, 106, Short.MAX_VALUE))
+								.addComponent(iAddressTxtFld, GroupLayout.DEFAULT_SIZE, 291, Short.MAX_VALUE)))
+						.addGroup(gl_iRegisterPane.createSequentialGroup()
+							.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.LEADING)
+								.addComponent(label_2)
+								.addComponent(label_3))
+							.addGap(24)
+							.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.LEADING)
+								.addGroup(gl_iRegisterPane.createSequentialGroup()
+									.addComponent(iNameTxtFld, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+									.addGap(18)
+									.addComponent(label_4, GroupLayout.PREFERRED_SIZE, 54, GroupLayout.PREFERRED_SIZE)
+									.addPreferredGap(ComponentPlacement.RELATED))
+								.addGroup(gl_iRegisterPane.createSequentialGroup()
+									.addComponent(iBirthdayTxtFld)
+									.addGap(27)))
+							.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.LEADING, false)
+								.addGroup(Alignment.TRAILING, gl_iRegisterPane.createSequentialGroup()
+									.addComponent(label_5)
+									.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+									.addComponent(iBoyRadioBttn)
+									.addGap(18)
+									.addComponent(iGirlRadioBttn))
+								.addComponent(iSignatureTxtFld, GroupLayout.PREFERRED_SIZE, 149, GroupLayout.PREFERRED_SIZE))))
+					.addGap(157))
+				.addGroup(gl_iRegisterPane.createSequentialGroup()
 					.addGap(240)
-					.addComponent(iToLoginBttn)
+					.addComponent(RegisterToLoginBttn)
 					.addGap(6)
-					.addComponent(iRegisterBttn))
-				.addGroup(gl_iRegisterPane.createSequentialGroup()
-					.addGap(10)
-					.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.TRAILING, false)
-						.addGroup(gl_iRegisterPane.createSequentialGroup()
-							.addComponent(label_6)
-							.addGap(24)
-							.addComponent(iPswdTxtFld1, GroupLayout.PREFERRED_SIZE, 109, GroupLayout.PREFERRED_SIZE)
-							.addGap(10)
-							.addComponent(label_7)
-							.addGap(16)
-							.addComponent(iPswdTxtFld2))
-						.addGroup(Alignment.LEADING, gl_iRegisterPane.createSequentialGroup()
-							.addComponent(label_8)
-							.addGap(24)
-							.addComponent(iAddressTxtFld, GroupLayout.PREFERRED_SIZE, 310, GroupLayout.PREFERRED_SIZE))))
-				.addGroup(gl_iRegisterPane.createSequentialGroup()
-					.addGap(10)
-					.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.TRAILING, false)
-						.addGroup(gl_iRegisterPane.createSequentialGroup()
-							.addComponent(label_2)
-							.addGap(24)
-							.addComponent(iNameTxtFld, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-							.addGap(10)
-							.addComponent(label_4)
-							.addGap(19)
-							.addComponent(iSignatureTxtFld))
-						.addGroup(Alignment.LEADING, gl_iRegisterPane.createSequentialGroup()
-							.addComponent(label_3)
-							.addGap(24)
-							.addComponent(iBirthdayTxtFld, GroupLayout.PREFERRED_SIZE, 109, GroupLayout.PREFERRED_SIZE)
-							.addGap(34)
-							.addComponent(label_5)
-							.addGap(35)
-							.addComponent(iBoyRadioBttn)
-							.addGap(34)
-							.addComponent(iGirlRadioBttn))))
+					.addComponent(RegisterBttn)
+					.addGap(74))
 		);
 		gl_iRegisterPane.setVerticalGroup(
 			gl_iRegisterPane.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_iRegisterPane.createSequentialGroup()
-					.addGap(27)
+					.addGap(30)
 					.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.LEADING)
-						.addGroup(gl_iRegisterPane.createSequentialGroup()
-							.addGap(3)
-							.addComponent(label_2))
-						.addGroup(gl_iRegisterPane.createSequentialGroup()
-							.addGap(3)
-							.addComponent(iNameTxtFld, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-						.addGroup(gl_iRegisterPane.createSequentialGroup()
-							.addGap(6)
-							.addComponent(label_4))
-						.addComponent(iSignatureTxtFld, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addGap(7)
-					.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.LEADING)
-						.addGroup(gl_iRegisterPane.createSequentialGroup()
-							.addGap(4)
-							.addComponent(label_3))
-						.addGroup(gl_iRegisterPane.createSequentialGroup()
-							.addGap(4)
-							.addComponent(iBirthdayTxtFld, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-						.addGroup(gl_iRegisterPane.createSequentialGroup()
-							.addGap(7)
-							.addComponent(label_5))
+						.addComponent(label_2)
+						.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.BASELINE)
+							.addComponent(iNameTxtFld, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+							.addComponent(label_4)
+							.addComponent(iSignatureTxtFld, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))
+					.addGap(11)
+					.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.BASELINE)
+						.addComponent(label_3)
+						.addComponent(iBirthdayTxtFld, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(iGirlRadioBttn)
 						.addComponent(iBoyRadioBttn)
-						.addComponent(iGirlRadioBttn))
-					.addGap(7)
-					.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.LEADING)
-						.addGroup(gl_iRegisterPane.createSequentialGroup()
-							.addGap(3)
-							.addComponent(label_6))
-						.addGroup(gl_iRegisterPane.createSequentialGroup()
-							.addGap(3)
-							.addComponent(iPswdTxtFld1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-						.addGroup(gl_iRegisterPane.createSequentialGroup()
-							.addGap(6)
-							.addComponent(label_7))
-						.addComponent(iPswdTxtFld2, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+						.addComponent(label_5))
+					.addGap(10)
+					.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.BASELINE)
+						.addComponent(label_6)
+						.addComponent(iPswdFld1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(label_7)
+						.addComponent(iPswdFld2, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
 					.addGap(5)
-					.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.LEADING)
+					.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(label_8)
-						.addGroup(gl_iRegisterPane.createSequentialGroup()
-							.addGap(2)
-							.addComponent(iAddressTxtFld, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))
+						.addComponent(iAddressTxtFld, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
 					.addGap(38)
 					.addGroup(gl_iRegisterPane.createParallelGroup(Alignment.LEADING)
-						.addComponent(iToLoginBttn)
-						.addComponent(iRegisterBttn)))
+						.addComponent(RegisterToLoginBttn)
+						.addComponent(RegisterBttn)))
 		);
 		iRegisterPane.setLayout(gl_iRegisterPane);
 		JLabel label = new JLabel("\u5E10\u53F7\uFF1A");
@@ -221,8 +245,8 @@ public class LoginViewer extends JFrame{
 		
 		iPswdTxtFld0 = new JPasswordField();
 		
-		JButton iLoginBttn = new JButton("\u767B\u5F55");
-		iLoginBttn.addActionListener(new ActionListener() {
+		JButton LoginBttn = new JButton("\u767B\u5F55");
+		LoginBttn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				//get data
 				long bid=(Long)iIdTxtFld.getValue();
@@ -264,10 +288,10 @@ public class LoginViewer extends JFrame{
 			}
 		});
 		
-		JButton iToRegisterBttn = new JButton("\u6CE8\u518C");
-		iToRegisterBttn.addActionListener(new ActionListener() {
+		JButton ToRegisterBttn = new JButton("\u6CE8\u518C");
+		ToRegisterBttn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				iCardLayout.next(LoginViewer.this.getContentPane());
+				iCardLayout.show(LoginViewer.this.getContentPane(),"name_29260218592308");
 			}
 		});
 		
@@ -291,9 +315,9 @@ public class LoginViewer extends JFrame{
 					.addGap(124)
 					.addComponent(iHideRadioBttn)
 					.addGap(18)
-					.addComponent(iToRegisterBttn)
+					.addComponent(ToRegisterBttn)
 					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(iLoginBttn)
+					.addComponent(LoginBttn)
 					.addContainerGap(123, Short.MAX_VALUE))
 		);
 		gl_iLoginPane.setVerticalGroup(
@@ -310,15 +334,69 @@ public class LoginViewer extends JFrame{
 					.addGap(40)
 					.addGroup(gl_iLoginPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(iHideRadioBttn)
-						.addComponent(iToRegisterBttn)
-						.addComponent(iLoginBttn))
+						.addComponent(ToRegisterBttn)
+						.addComponent(LoginBttn))
 					.addContainerGap(84, Short.MAX_VALUE))
 		);
 		iLoginPane.setLayout(gl_iLoginPane);
+		
+		iInfoPane = new JPanel();
+		getContentPane().add(iInfoPane, "name_14760469390449");
+		
+		JLabel label_9 = new JLabel("\u606D\u559C\u4F60\u6CE8\u518C\u6210\u529F\uFF1A");
+		
+		JLabel label_10 = new JLabel("\u4F60\u7684\u5E10\u53F7\uFF1A");
+		
+		iIdLabel = new JLabel("");
+		
+		JButton InfoToLoginBttn = new JButton("\u767B\u5F55");
+		InfoToLoginBttn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				iIdTxtFld.setValue(new Long(iIdBuf));
+				iCardLayout.show(LoginViewer.this.getContentPane(),"name_29273997257395");
+			}
+		});
+		GroupLayout gl_iInfoPane = new GroupLayout(iInfoPane);
+		gl_iInfoPane.setHorizontalGroup(
+			gl_iInfoPane.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_iInfoPane.createSequentialGroup()
+					.addGroup(gl_iInfoPane.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_iInfoPane.createSequentialGroup()
+							.addGap(57)
+							.addComponent(label_9))
+						.addGroup(gl_iInfoPane.createSequentialGroup()
+							.addGap(125)
+							.addComponent(label_10)
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addComponent(iIdLabel)))
+					.addContainerGap(243, Short.MAX_VALUE))
+				.addGroup(Alignment.TRAILING, gl_iInfoPane.createSequentialGroup()
+					.addContainerGap(264, Short.MAX_VALUE)
+					.addComponent(InfoToLoginBttn)
+					.addGap(113))
+		);
+		gl_iInfoPane.setVerticalGroup(
+			gl_iInfoPane.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_iInfoPane.createSequentialGroup()
+					.addGap(50)
+					.addComponent(label_9)
+					.addGap(18)
+					.addGroup(gl_iInfoPane.createParallelGroup(Alignment.BASELINE)
+						.addComponent(label_10)
+						.addComponent(iIdLabel))
+					.addGap(76)
+					.addComponent(InfoToLoginBttn)
+					.addContainerGap(65, Short.MAX_VALUE))
+		);
+		iInfoPane.setLayout(gl_iInfoPane);
 	}
 	
 	private ComModuleClt iCom;
 	private WorkClt iWork;
+	
+	private int iIdBuf;
+	
+	private DateFormat iDateFormat;
 	
 	private static final long serialVersionUID = 1L;
 	private JPanel iRegisterPane;
@@ -327,17 +405,19 @@ public class LoginViewer extends JFrame{
 	private JTextField iNameTxtFld;
 	private JTextField iSignatureTxtFld;
 	private JLabel label_6;
-	private JTextField iPswdTxtFld1;
 	private JLabel label_7;
-	private JTextField iPswdTxtFld2;
 	private JLabel label_8;
 	private JTextField iAddressTxtFld;
-	private JTextField iBirthdayTxtFld;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	private JRadioButton iBoyRadioBttn;
 	private JRadioButton iGirlRadioBttn;
 	private JRadioButton iHideRadioBttn;
 	private JFormattedTextField iIdTxtFld;
+	private JFormattedTextField iBirthdayTxtFld;
+	private JPasswordField iPswdFld1;
+	private JPasswordField iPswdFld2;
+	private JPanel iInfoPane;
+	private JLabel iIdLabel;
 	public static void main(String[] args) {
 		System.out.println("Hello World!!");
 		LoginViewer it=new LoginViewer();
