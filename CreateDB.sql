@@ -45,6 +45,7 @@ create table info(
 	foreign key(toid) references chatuser(id),
 	check(fromid<>toid)
 );
+create index infotoid on info(id,toid);
 insert into info values(1,0,1,"helloworld!","2008-12-26 23:23:55",0);
 insert into info(fromid,toid,content,sendtime,photonum) 
 values(0,1,"helloworld!","2008-12-26 23:23:55",0);
@@ -69,7 +70,7 @@ create table msgleft(
 	foreign key(infoid,touserid) references info(id,toid),
 	primary key(infoid)
 );
-insert into msgleft values(1,0);
+insert into msgleft values(1,1);
 select fromid,toid,sendtime,content from info,msgleft where infoid=id and toid=1;
 --5.	分组表（用户编号、分组名称）
 create table frdgroup(

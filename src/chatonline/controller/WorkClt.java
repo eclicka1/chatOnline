@@ -15,7 +15,7 @@ import chatonline.utility.User;
 
 public class WorkClt {
 	private ComModuleClt iCom;
-	private int iId;
+	public int iId;
 	private HookListenClt ihook;
 
 	/*******************************************************************************
