@@ -156,7 +156,7 @@ public class WorkSer {
 	 ********************************************************************************/
 	public void findFrd(Scanner ascan) {// User auser
 		User buser = new User();
-		buser.initFromStrWithParameter(ascan.nextLine());
+		buser.initFromStrWithParameter(ascan.nextLine().substring(1));
 		List<User> blist = new LinkedList<User>();
 		Access.findFrd(blist, buser);
 		iCom.sendCmd(User.toLine(blist));
@@ -180,7 +180,8 @@ public class WorkSer {
 		}
 		ComModuleSer bcom = ComModuleSer.getComModule(bid);
 		if (bcom != null) {
-			bcom.sendCmd(String.format("getAskFrdRespond %d %s", iId, bis));
+			System.out.println("֪ͨ"+bid);
+			bcom.sendInfo(String.format("getAskFrdRespond %d %s", iId, bis));
 		}
 	}
 
@@ -208,28 +209,28 @@ public class WorkSer {
 	public void addGroup(Scanner ascan) {// String aname
 		String bname = ascan.next();
 		Access.addGroup(iId, bname);
-		iCom.sendInfo("ok");
+		iCom.sendCmd("ok");
 		ascan.close();
 	}
 
 	public void delGroup(Scanner ascan) {// String aname
 		String bname = ascan.next();
 		Access.delGroup(iId, bname);
-		iCom.sendInfo("ok");
+		iCom.sendCmd("ok");
 	}
 
 	public void renameGroup(Scanner ascan) {// String aOldName, String aNewName
 		String bold = ascan.next();
 		String bnew = ascan.next();
 		Access.renameGroup(iId, bold, bnew);
-		iCom.sendInfo("ok");
+		iCom.sendCmd("ok");
 	}
 
 	public void moveToGroup(Scanner ascan) {// int aid, String aname
 		int bid = ascan.nextInt();
 		String bname = ascan.next();
 		Access.moveToGroup(iId, bid, bname);
-		iCom.sendInfo("ok");
+		iCom.sendCmd("ok");
 	}
 
 	/*******************************************************************************

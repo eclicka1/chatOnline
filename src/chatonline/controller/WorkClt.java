@@ -171,6 +171,7 @@ public class WorkClt {
 						WorkClt.class.getMethod(bscan.next(),
 								new Class[] { Scanner.class }).invoke(
 								WorkClt.this, new Object[] { bscan });
+						bscan.close();
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -185,7 +186,11 @@ public class WorkClt {
 	 * manage friend
 	 ********************************************************************************/
 	public void findFrd(List<User> alist, User auser) {
-		iCom.sendCmd("findFrd " + auser.toLineWithParameter());
+		String buser=auser.toLineWithParameter();
+		if(buser!=null)
+			iCom.sendCmd("findFrd " + buser);
+		else
+			iCom.sendCmd("findFrd ");
 		String bcmd = iCom.getCmd();
 		if (bcmd.length() == 0)
 			return;
@@ -201,13 +206,19 @@ public class WorkClt {
 		int bid=ascan.nextInt();
 		boolean bis=ascan.nextBoolean();
 		
+		System.out.println("getaskfrdrespond!! hook");
 		ihook.getAskFrdRespond(bid,bis);
 	}
 	public void askForFrd(Scanner ascan) {
 		AskFrd bask = new AskFrd(ascan.nextLine());
 
 		// hook
-		ihook.askForFrd(bask);
+		boolean bIsAgree=ihook.askForFrd(bask);
+		String bcmd=String.format("askFrdRespond %d %s",bask.ifromid,bIsAgree);
+		System.out.println(bcmd);
+		iCom.sendCmd(bcmd);
+
+		ihook.afterAskFrd(bask.ifromid,bIsAgree);
 	}
 
 	public void askFrdRespond(int aid, boolean aIsAgree) {

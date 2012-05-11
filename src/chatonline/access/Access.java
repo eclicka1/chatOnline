@@ -1,5 +1,6 @@
 package chatonline.access;
 
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -35,7 +36,7 @@ public class Access {
 			reSet = stmt.executeQuery();
 			if (reSet.next()) {
 				bid = reSet.getInt("maxid");
-				auser.iId=bid;
+				auser.iId = bid;
 			}
 			DBMSTool.closeStatement(stmt);
 
@@ -116,11 +117,24 @@ public class Access {
 					blist = new LinkedList<User>();
 					amap.put(bgroup, blist);
 				}
-				buser = new User(11, "lhl", "lihailin", "author", User.ONLINE);
 				buser = new User(reSet.getInt("frdid"),
 						reSet.getString("name"), reSet.getString("remark"),
 						reSet.getString("signature"), reSet.getInt("state"));
 				amap.get(bgroup).add(buser);
+			}
+			DBMSTool.closeResultSet(reSet);
+			DBMSTool.closeStatement(stmt);
+
+			sqlstr = "select * from frdgroup where userid=?";
+			stmt = con.prepareStatement(sqlstr);
+			stmt.setInt(1, aid);
+			reSet = stmt.executeQuery();
+			while (reSet.next()) {
+				String bgoup = reSet.getString("name");
+				if (!amap.containsKey(bgoup)) {
+					blist = new LinkedList<User>();
+					amap.put(bgoup, blist);
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -147,16 +161,17 @@ public class Access {
 			reSet = stmt.executeQuery();
 			while (reSet.next()) {
 				if (0 < reSet.getInt("photonum")) {
-					binfo2=new InfoWithPhoto(reSet.getInt("fromid"),
-							reSet.getInt("toid"),
-							reSet.getDate("sendtime"));
+					binfo2 = new InfoWithPhoto(reSet.getInt("fromid"),
+							reSet.getInt("toid"), reSet.getDate("sendtime"));
 					binfo2.initFromTxtLine(reSet.getString("content"));
 					binfo2.readPhotoFile();
 					alist2.add(binfo2);
 				} else {
+					// java String 的编码ISO8859_1、GB2312、GBK、UTF-8/UTF-16/UTF-32
 					binfo = new Info(reSet.getInt("fromid"),
 							reSet.getInt("toid"), reSet.getDate("sendtime"),
-							reSet.getString("content"));
+							new String(reSet.getString("content").getBytes(
+									"ISO-8859-1")));// 解决mysql和Java中文乱码的问题
 					alist.add(binfo);
 				}
 			}
@@ -167,6 +182,9 @@ public class Access {
 			stmt.setInt(1, aid);
 			stmt.executeUpdate();
 		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			DBMSTool.closeResultSet(reSet);
@@ -213,16 +231,16 @@ public class Access {
 			bbld.append(" and id=" + auser.iId);
 		} else {
 			if (auser.iName != null) {
-				bbld.append(" and name=" + auser.iName);
+				bbld.append(" and name like '%" + auser.iName+"%'");
 			}
 			if (auser.iAddress != null) {
-				bbld.append(" and address=" + auser.iAddress);
+				bbld.append(" and address like '%" + auser.iAddress+"%'");
 			}
 			if (auser.iBirthday != null) {
-				bbld.append(" and birthday=" + df.format(auser.iBirthday));
+				bbld.append(" and birthday like '%" + df.format(auser.iBirthday)+"%'");
 			}
 			if (auser.iSignature != null) {
-				bbld.append(" and signature=" + auser.iSignature);
+				bbld.append(" and signature like '%" + auser.iSignature+"%'");
 			}
 			if (auser.iSex != -1) {
 				bbld.append(" and sex=" + auser.iSex);
@@ -231,9 +249,10 @@ public class Access {
 				bbld.append(" and state=" + auser.iState);
 			}
 			if (auser.iRegisterDay != null) {
-				bbld.append(" and registerday" + df.format(auser.iRegisterDay));
+				bbld.append(" and registerday like '%" + df.format(auser.iRegisterDay)+"%'");
 			}
 		}
+		System.out.println(bbld.toString());
 		Connection con = DBMSTool.getConnection();
 		PreparedStatement stmt = null;
 		ResultSet reSet = null;
@@ -352,7 +371,8 @@ public class Access {
 			stmt = con.prepareStatement(bSqlStr);
 			stmt.setInt(1, ainfo.iFromId);
 			stmt.setInt(2, ainfo.iToId);
-			stmt.setString(3, ainfo.iInfo);
+			stmt.setString(3, new String(ainfo.iInfo.getBytes(), "ISO-8859-1"));
+			System.out.println(ainfo.iInfo);
 			stmt.setString(4, df.format(ainfo.iDate));
 			stmt.setInt(5, 0);
 			stmt.executeUpdate();
@@ -374,6 +394,9 @@ public class Access {
 				}
 			}
 		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			DBMSTool.closeStatement(stmt);

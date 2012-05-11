@@ -15,22 +15,15 @@ import javax.swing.JRadioButton;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
-
 import javax.swing.ButtonGroup;
 
 import chatonline.controller.ComModuleClt;
-import chatonline.controller.HookListenClt;
 import chatonline.controller.WorkClt;
-import chatonline.utility.AskFrd;
-import chatonline.utility.Info;
-import chatonline.utility.InfoWithPhoto;
 import chatonline.utility.User;
 import javax.swing.JFormattedTextField;
 import javax.swing.text.DateFormatter;
@@ -57,29 +50,9 @@ public class LoginViewer extends JFrame {
 		iCom.initCom();
 		iWork = new WorkClt();
 		iWork.setCom(iCom);
-		iWork.setHook(new HookListenClt() {
-			@Override
-			public void sentInfo(Info ainfo) {
-			}
-
-			@Override
-			public void getAskFrdRespond(int aid, boolean ais) {
-			}
-
-			@Override
-			public void delFrd(int aid) {
-			}
-
-			@Override
-			public void askForFrd(AskFrd aask) {
-			}
-
-			@Override
-			public void getPhotos(List<InfoWithPhoto> alist) {
-			}
-		});
-
-		/*******************************************************************************
+	
+		
+	/*******************************************************************************
 		 * view codes
 		 ********************************************************************************/
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -512,7 +485,7 @@ public class LoginViewer extends JFrame {
 		JButton InfoToLoginBttn = new JButton("\u767B\u5F55");
 		InfoToLoginBttn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				iIdTxtFld.setValue(new Long(iIdBuf));
+				iIdTxtFld.setValue(new Long(iIdBuf));//设置数字格式输入框的值使用相应对象
 				iCardLayout.show(LoginViewer.this.getContentPane(),
 						"name_29273997257395");
 			}

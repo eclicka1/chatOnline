@@ -17,8 +17,9 @@ import chatonline.utility.InfoWithPhoto;
  */
 public interface HookListenClt {
 	public void delFrd(int aid);
-	public void askForFrd(AskFrd aask);
+	public boolean askForFrd(AskFrd aask);
 	public void sentInfo(Info ainfo);
 	public void getAskFrdRespond(int aid,boolean ais);
 	public void getPhotos(List<InfoWithPhoto> alist);
+	public void afterAskFrd(int aid,boolean ais);
 }

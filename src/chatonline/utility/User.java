@@ -149,6 +149,10 @@ public User(String aline,boolean aIsAll){
 	}
 
 	public void initFromStrWithParameter(String astr) {
+		System.out.println("initfrom:"+astr);
+		
+		if(astr==null||astr.equals(""))
+			return ;
 		Scanner bscan = new Scanner(astr);
 		try {
 			while (bscan.hasNext()) {
